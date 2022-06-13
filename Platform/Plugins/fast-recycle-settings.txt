@@ -1,0 +1,6 @@
+{
+  "loggingLevel": "none",
+  "hotkeys": {
+    "recycle": "Ctrl N1",
+  }
+}

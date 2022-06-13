@@ -1,2 +1,3 @@
-# fast-recycle
-Recycles items in some chest
+# Fast recycle
+
+Recycles items inside some chest
