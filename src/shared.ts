@@ -27,3 +27,16 @@ const GHk = (k: string) => H.FromObject(mod_name, "hotkeys", k)
 
 /** Gets a hotkey and logs it to console. */
 export const GetHotkey = H.GetAndLog(LAT, GHk)
+
+export interface FileData {
+  Keywords: { [key: string]: KeywordData[] }
+}
+
+export interface KeywordData {
+  recycleTo: string
+  matRatio: number
+}
+
+let ignoredKeywords: string[] = []
+
+// ignoredKeywords = JSON.parse("")
