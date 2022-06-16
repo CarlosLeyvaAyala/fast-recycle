@@ -1,6 +1,6 @@
 import { DebugLib, FormLib, Hotkeys } from "DMLib"
 import * as MiscUtil from "PapyrusUtil/MiscUtil"
-import { FileData, GetHotkey, LA, LE, LV } from "shared"
+import { config, FileData, GetHotkey, LA, LE, LV, Materials } from "shared"
 import {
   Armor,
   Container,
@@ -70,100 +70,140 @@ namespace Recycle {
     if (CountNonPlayable(cn) === n) return NotifyEmpty()
 
     const data = ReadDataFiles()
-    Recycle(cn, data)
+    Recycling.Execute(cn, data)
   }
 
-  const F = FormLib
-  const IsValidType = (t: FormLib.ItemType) =>
-    t == F.ItemType.Weapon ||
-    t == F.ItemType.Ammo ||
-    t == F.ItemType.Armor ||
-    t == F.ItemType.Misc
+  namespace Recycling {
+    /** Checks to see if an item can be recycled. */
+    namespace Checks {
+      const F = FormLib
 
-  const ShouldBeIgnored = (i: Form, keys: number[]) =>
-    keys.filter((id) => i.hasKeyword(Keyword.from(Game.getFormEx(id))))
-      .length >= 1
+      const IsValidType = (t: FormLib.ItemType) =>
+        t == F.ItemType.Weapon ||
+        t == F.ItemType.Ammo ||
+        t == F.ItemType.Armor ||
+        t == F.ItemType.Misc
 
-  const IsEnchanted = (i: Form) =>
-    Armor.from(i)?.getEnchantment() || Weapon.from(i)?.getEnchantment()
+      const ShouldBeIgnored = (i: Form, keys: number[]) =>
+        keys.filter((id) => i.hasKeyword(Keyword.from(Game.getFormEx(id))))
+          .length >= 1
 
-  type RecycleResult = Map<string, number>
+      const IsEnchanted = (i: Form) =>
+        Armor.from(i)?.getEnchantment() || Weapon.from(i)?.getEnchantment()
 
-  function GetAllKeywordMatches(item: Form, data: ProcessData) {
-    const keys = data.mats.Keywords
-    let allMatches: string[] = []
-
-    FormLib.ForEachKeywordR(item, (k) => {
-      const kName = k.getString()
-      for (const key in keys)
-        if (kName.toLowerCase().includes(key.toLowerCase()))
-          allMatches.push(key)
-    })
-    return allMatches
-  }
-
-  function ItemToMats(
-    item: Form,
-    n: number,
-    data: ProcessData
-  ): RecycleResult | null {
-    const keys = data.mats.Keywords
-    const allMatches = GetAllKeywordMatches(item, data)
-
-    if (allMatches.length < 1) return null
-    const lastMatch = allMatches[allMatches.length - 1]
-
-    if (keys[lastMatch].length < 1) return null // Keyword with empty materials
-
-    let r: RecycleResult = new Map()
-    const w = item.getWeight() * n
-
-    keys[lastMatch].forEach((m) => {
-      r.set(m.recycleTo, w * m.matRatio)
-    })
-    return r
-  }
-
-  function ItemsToMats(cn: ObjectReference, data: ProcessData) {
-    let result: RecycleResult = new Map()
-    FormLib.ForEachItemREx(cn, (i) => {
-      if (!i.isPlayable()) return
-
-      const t = FormLib.GetItemType(i)
-      if (!IsValidType(t)) return
-      if (ShouldBeIgnored(i, data.ignore)) return
-      if (IsEnchanted(i)) return
-
-      const n = cn.getItemCount(i)
-      const r = ItemToMats(i, n, data)
-      if (!r) {
-        LV(`${i.getName()} has no materials to get from recycling.`)
-        return
+      export function CanBeRecycled(i: Form, data: ProcessData) {
+        // TODO: Exclude ores and ingots
+        if (!i.isPlayable()) return false
+        if (!IsValidType(FormLib.GetItemType(i))) return false
+        if (ShouldBeIgnored(i, data.ignore)) return false
+        if (config.ignoreEnchanted && IsEnchanted(i)) return false
+        return true
       }
-
-      cn.removeItem(i, n, true, null)
-
-      // Add gotten maps to global materials result
-      for (const [k, v] of r) {
-        const old = result.has(k) ? result.get(k) : 0
-        //@ts-ignore
-        result.set(k, old + v)
-      }
-    })
-    for (const [k, v] of result) {
-      result.set(k, Math.ceil(v))
     }
 
-    return result
-  }
+    /** Functions related to get which materials an item should be transformed to. */
+    namespace Convert {
+      type RecycleResult = Map<string, number>
+      type ItemToMatFunc = (item: Form, keys: Materials) => string[]
 
-  function Recycle(cn: ObjectReference, data: ProcessData) {
-    const recycled = ItemsToMats(cn, data)
-    recycled.forEach((v, k) => {
-      const item = uIdToFrom(k)
-      cn.addItem(item, v, true)
-    })
-    Debug.messageBox("Recycling has finished")
+      /** Gets material matches based on keywords an item has. */
+      function MatsFromKeywords(item: Form, keys: Materials) {
+        let allMatches: string[] = []
+
+        FormLib.ForEachKeywordR(item, (k) => {
+          const kName = k.getString()
+          for (const key in keys)
+            if (kName.toLowerCase().includes(key.toLowerCase()))
+              allMatches.push(key)
+        })
+        return allMatches
+      }
+
+      function MatsFromName(item: Form, keys: Materials) {
+        let matches: string[] = []
+        const n = item.getName().toLowerCase()
+        for (const key in keys)
+          if (n.includes(key.toLowerCase())) matches.push(key)
+        return matches
+      }
+
+      /** Gets recycled materials for an item based on a string. */
+      function StringToMats(
+        item: Form,
+        n: number,
+        data: ProcessData,
+        GetMatches: ItemToMatFunc
+      ) {
+        const keys = data.mats.Keywords
+        const RemoveEmptyMats = (key: string) => keys[key].length > 0
+        const allMatches = GetMatches(item, keys).filter(RemoveEmptyMats)
+
+        if (allMatches.length === 0) return null // No match
+
+        let r: RecycleResult = new Map()
+        const w = item.getWeight() * n
+
+        // This is why it's important that keywords in json files are alphabetically sorted
+        const lastMatch = allMatches[allMatches.length - 1]
+
+        keys[lastMatch].forEach((m) => {
+          r.set(m.recycleTo, w * m.matRatio)
+        })
+        return r
+      }
+
+      /** Gets which recycled materials an item should be converted to. */
+      function ItemToMats(
+        item: Form,
+        n: number,
+        data: ProcessData
+      ): RecycleResult | null {
+        const keyMatch = StringToMats(item, n, data, MatsFromKeywords)
+        return !keyMatch && config.processByItemName
+          ? StringToMats(item, n, data, MatsFromName)
+          : keyMatch
+      }
+
+      /** Converts all items in a container to a Map of materials and quantities. */
+      export function ItemsToMats(cn: ObjectReference, data: ProcessData) {
+        let result: RecycleResult = new Map()
+
+        FormLib.ForEachItemREx(cn, (i) => {
+          if (!Checks.CanBeRecycled(i, data)) return
+
+          const n = cn.getItemCount(i)
+          const r = ItemToMats(i, n, data)
+          if (!r) {
+            LV(`${i.getName()} has no materials to get from recycling.`)
+            return
+          }
+
+          LV(`${i.getName()} was recycled.`)
+          cn.removeItem(i, n, true, null)
+
+          // Add gotten maps to global materials result
+          for (const [k, v] of r) {
+            const old = result.has(k) ? result.get(k) : 0
+            //@ts-ignore
+            result.set(k, old + v)
+          }
+        })
+        // `Ceil` is used to guarantee at least one recycled item is got
+        for (const [k, v] of result) result.set(k, Math.ceil(v))
+
+        return result
+      }
+    }
+
+    /** Converts all viable items in some container to raw matierials. */
+    export function Execute(cn: ObjectReference, data: ProcessData) {
+      const recycled = Convert.ItemsToMats(cn, data)
+      recycled.forEach((v, k) => {
+        const item = uIdToFrom(k)
+        cn.addItem(item, v, true)
+      })
+      Debug.messageBox("Recycling has finished")
+    }
   }
 
   /** Gets all data this mod needs to work */

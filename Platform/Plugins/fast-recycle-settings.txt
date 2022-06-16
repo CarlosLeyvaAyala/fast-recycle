@@ -1,5 +1,7 @@
 {
   "loggingLevel": "verbose",
+  "ignoreEnchanted": true,
+  "processByItemName": true,
   "hotkeys": {
     "recycle": "Ctrl N1"
   }

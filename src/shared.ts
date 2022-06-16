@@ -1,6 +1,17 @@
 import { DebugLib as D, Hotkeys as H } from "DMLib"
 import { settings } from "skyrimPlatform"
 
+export interface Config {
+  loggingLevel: string
+  ignoreEnchanted: boolean
+  processByItemName: boolean
+  hotkeys: Hotkeys
+}
+
+export interface Hotkeys {
+  recycle: string
+}
+
 export const modNameDisplay = "FastRecycle"
 const mod_name = "fast-recycle"
 
@@ -28,11 +39,16 @@ const GHk = (k: string) => H.FromObject(mod_name, "hotkeys", k)
 /** Gets a hotkey and logs it to console. */
 export const GetHotkey = H.GetAndLog(LAT, GHk)
 
+export type Materials = { [key: string]: KeywordData[] }
+
 export interface FileData {
-  Keywords: { [key: string]: KeywordData[] }
+  Keywords: Materials
 }
 
 export interface KeywordData {
   recycleTo: string
   matRatio: number
 }
+
+//@ts-ignore
+export const config: Config = settings[mod_name]
