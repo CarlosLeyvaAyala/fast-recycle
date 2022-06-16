@@ -1,0 +1,6 @@
+{
+  "Keywords": {
+    "Vampire": [{ "recycleTo": "Dragonborn.esm|0x2B06B", "matRatio": 0.1 }],
+    "ZZZZ": [{ "recycleTo": "PepeNava|0x6F993", "matRatio": 0.1 }]
+  }
+}

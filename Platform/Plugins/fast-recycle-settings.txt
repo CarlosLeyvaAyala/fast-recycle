@@ -1,6 +1,6 @@
 {
-  "loggingLevel": "none",
+  "loggingLevel": "verbose",
   "hotkeys": {
-    "recycle": "Ctrl N1",
+    "recycle": "Ctrl N1"
   }
 }

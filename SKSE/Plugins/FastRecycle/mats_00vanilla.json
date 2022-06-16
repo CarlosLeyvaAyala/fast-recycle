@@ -1,41 +1,37 @@
 {
   "Keywords": {
     "Amber": [
-      { "recycleTo": "ccbgssse025-advdsgs.esm|0xBC7", "matRatio": 0.05 }
+      { "recycleTo": "ccbgssse025-advdsgs.esm|0xBC7", "matRatio": 0.5 }
     ],
     "BearStormcloak": [{ "recycleTo": "Skyrim.esm|0xDB5D2", "matRatio": 0.1 }],
     "Blades": [{ "recycleTo": "Skyrim.esm|0x5ACE5", "matRatio": 0.05 }],
-    "BonemoldHeavy": [{ "recycleTo": "Skyrim.esm|0x34CDD", "matRatio": 0.08 }],
-    "BonemoldLight": [{ "recycleTo": "Skyrim.esm|0x34CDD", "matRatio": 0.05 }],
-    "ChitinHeavy": [
-      { "recycleTo": "Dragonborn.esm|0x2B04E", "matRatio": 0.08 }
-    ],
-    "ChitinLight": [
-      { "recycleTo": "Dragonborn.esm|0x2B04E", "matRatio": 0.05 }
-    ],
-    "Daedric": [{ "recycleTo": "Skyrim.esm|0x5AD9D", "matRatio": 0.05 }],
-    "Dark": [{ "recycleTo": "Skyrim.esm|0x5ADA0", "matRatio": 0.05 }],
+    "BonemoldHeavy": [{ "recycleTo": "Skyrim.esm|0x34CDD", "matRatio": 0.8 }],
+    "BonemoldLight": [{ "recycleTo": "Skyrim.esm|0x34CDD", "matRatio": 0.5 }],
+    "ChitinHeavy": [{ "recycleTo": "Dragonborn.esm|0x2B04E", "matRatio": 0.8 }],
+    "ChitinLight": [{ "recycleTo": "Dragonborn.esm|0x2B04E", "matRatio": 0.5 }],
+    "Daedric": [{ "recycleTo": "Skyrim.esm|0x5AD9D", "matRatio": 0.5 }],
+    "Dark": [{ "recycleTo": "Skyrim.esm|0x5ADA0", "matRatio": 0.5 }],
     "Dawnguard": [{ "recycleTo": "Skyrim.esm|0x5ACE5", "matRatio": 0.05 }],
-    "Dragonbone": [{ "recycleTo": "Skyrim.esm|0x3ADA4", "matRatio": 0.05 }],
-    "Dragonplate": [{ "recycleTo": "Skyrim.esm|0x3ADA3", "matRatio": 0.05 }],
+    "Dragonbone": [{ "recycleTo": "Skyrim.esm|0x3ADA4", "matRatio": 0.5 }],
+    "Dragonplate": [{ "recycleTo": "Skyrim.esm|0x3ADA3", "matRatio": 0.5 }],
     "Draugr": [{ "recycleTo": "Skyrim.esm|0x5ACE5", "matRatio": 0.05 }],
     "DraugrHoned": [{ "recycleTo": "Skyrim.esm|0x5ACE5", "matRatio": 0.08 }],
-    "Dwarven": [{ "recycleTo": "Skyrim.esm|0xDB8A2", "matRatio": 0.05 }],
-    "Ebony": [{ "recycleTo": "Skyrim.esm|0x5AD9D", "matRatio": 0.05 }],
-    "Elven": [{ "recycleTo": "Skyrim.esm|0x5AD9F", "matRatio": 0.05 }],
+    "Dwarven": [{ "recycleTo": "Skyrim.esm|0xDB8A2", "matRatio": 0.5 }],
+    "Ebony": [{ "recycleTo": "Skyrim.esm|0x5AD9D", "matRatio": 0.5 }],
+    "Elven": [{ "recycleTo": "Skyrim.esm|0x5AD9F", "matRatio": 0.5 }],
     "ElvenGilded": [
-      { "recycleTo": "Skyrim.esm|0x5AD9F", "matRatio": 0.08 },
-      { "recycleTo": "Skyrim.esm|0x5ADA0", "matRatio": 0.01 }
+      { "recycleTo": "Skyrim.esm|0x5AD9F", "matRatio": 0.8 },
+      { "recycleTo": "Skyrim.esm|0x5ADA0", "matRatio": 0.1 }
     ],
     "Falmer": [{ "recycleTo": "Skyrim.esm|0x3AD57", "matRatio": 0.05 }],
     "FalmerHardened": [{ "recycleTo": "Skyrim.esm|0x3AD57", "matRatio": 0.1 }],
     "FalmerHoned": [{ "recycleTo": "Skyrim.esm|0x3AD57", "matRatio": 0.08 }],
     "Forsworn": [{ "recycleTo": "Skyrim.esm|0xDB5D2", "matRatio": 0.1 }],
-    "Glass": [{ "recycleTo": "Skyrim.esm|0x5ADA1", "matRatio": 0.05 }],
-    "Gold": [{ "recycleTo": "Skyrim.esm|0x5AD9E", "matRatio": 0.05 }],
-    "Golden": [{ "recycleTo": "Skyrim.esm|0x5AD9F", "matRatio": 0.05 }],
+    "Glass": [{ "recycleTo": "Skyrim.esm|0x5ADA1", "matRatio": 0.5 }],
+    "Gold": [{ "recycleTo": "Skyrim.esm|0x5AD9E", "matRatio": 0.5 }],
+    "Golden": [{ "recycleTo": "Skyrim.esm|0x5AD9F", "matRatio": 0.5 }],
     "Hide": [{ "recycleTo": "Skyrim.esm|0xDB5D2", "matRatio": 0.1 }],
-    "Hunter": [{ "recycleTo": "Skyrim.esm|0x5ACE5", "matRatio": 0.05 }],
+    "Hunter": [{ "recycleTo": "Skyrim.esm|0xDB5D2", "matRatio": 0.05 }],
     "Imperial": [{ "recycleTo": "Skyrim.esm|0x5ACE5", "matRatio": 0.05 }],
     "ImperialHeavy": [{ "recycleTo": "Skyrim.esm|0x5ACE5", "matRatio": 0.05 }],
     "ImperialLight": [{ "recycleTo": "Skyrim.esm|0xDB5D2", "matRatio": 0.1 }],
@@ -43,22 +39,22 @@
     "Iron": [{ "recycleTo": "Skyrim.esm|0x5ACE4", "matRatio": 0.05 }],
     "IronBanded": [{ "recycleTo": "Skyrim.esm|0x5ACE4", "matRatio": 0.08 }],
     "Leather": [{ "recycleTo": "Skyrim.esm|0xDB5D2", "matRatio": 0.1 }],
-    "MoragTong": [{ "recycleTo": "Dragonborn.esm|0x2B04E", "matRatio": 0.05 }],
+    "MoragTong": [{ "recycleTo": "Dragonborn.esm|0x2B04E", "matRatio": 0.5 }],
     "Madness": [
-      { "recycleTo": "ccbgssse025-advdsgs.esm|0xBC8", "matRatio": 0.05 }
+      { "recycleTo": "ccbgssse025-advdsgs.esm|0xBC8", "matRatio": 0.5 }
     ],
     "Nordic": [{ "recycleTo": "Skyrim.esm|0x5ACE5", "matRatio": 0.05 }],
-    "NordicHeavy": [{ "recycleTo": "Skyrim.esm|0x5ADA0", "matRatio": 0.08 }],
-    "NordicLight": [{ "recycleTo": "Skyrim.esm|0x5ADA0", "matRatio": 0.05 }],
-    "Orcish": [{ "recycleTo": "Skyrim.esm|0x5AD99", "matRatio": 0.05 }],
+    "NordicHeavy": [{ "recycleTo": "Skyrim.esm|0x5ADA0", "matRatio": 0.8 }],
+    "NordicLight": [{ "recycleTo": "Skyrim.esm|0x5ADA0", "matRatio": 0.5 }],
+    "Orcish": [{ "recycleTo": "Skyrim.esm|0x5AD99", "matRatio": 0.5 }],
     "Scaled": [{ "recycleTo": "Skyrim.esm|0x5ACE5", "matRatio": 0.05 }],
-    "Silver": [{ "recycleTo": "Skyrim.esm|0x5ACE3", "matRatio": 0.05 }],
-    "Stalhrim": [{ "recycleTo": "Dragonborn.esm|0x2B06B", "matRatio": 0.05 }],
+    "Silver": [{ "recycleTo": "Skyrim.esm|0x5ACE3", "matRatio": 0.5 }],
+    "Stalhrim": [{ "recycleTo": "Dragonborn.esm|0x2B06B", "matRatio": 0.5 }],
     "StalhrimHeavy": [
-      { "recycleTo": "Dragonborn.esm|0x2B06B", "matRatio": 0.08 }
+      { "recycleTo": "Dragonborn.esm|0x2B06B", "matRatio": 0.8 }
     ],
     "StalhrimLight": [
-      { "recycleTo": "Dragonborn.esm|0x2B06B", "matRatio": 0.05 }
+      { "recycleTo": "Dragonborn.esm|0x2B06B", "matRatio": 0.5 }
     ],
     "Steel": [{ "recycleTo": "Skyrim.esm|0x5ACE5", "matRatio": 0.05 }],
     "SteelPlate": [{ "recycleTo": "Skyrim.esm|0x5ACE5", "matRatio": 0.08 }],

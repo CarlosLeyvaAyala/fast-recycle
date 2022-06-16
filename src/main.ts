@@ -1,17 +1,13 @@
-import { FormLib, Hotkeys } from "DMLib"
-import * as JArray from "JContainers/JArray"
-import * as JFormMap from "JContainers/JFormMap"
-import * as JMap from "JContainers/JMap"
-import * as JTs from "JContainers/JTs"
-import * as JValue from "JContainers/JValue"
-import { GetHotkey, LA } from "shared"
+import { DebugLib, FormLib, Hotkeys } from "DMLib"
+import * as MiscUtil from "PapyrusUtil/MiscUtil"
+import { FileData, GetHotkey, LA, LE, LV } from "shared"
 import {
-  Ammo,
   Armor,
   Container,
   Debug,
   Form,
   Game,
+  Keyword,
   ObjectReference,
   on,
   Weapon,
@@ -35,177 +31,242 @@ export function main() {
 // "$2": [{"recycleTo": "$3", "matRatio": 0.05}],\n
 
 namespace Recycle {
-  interface FileData {
-    /** Handle to a JArray */
-    ignoreKeyword: number
-    /** Handle to a JFormMap */
-    breakdownWeapInfo: number
-    /** Handle to a JFormMap */
-    breakdownArmorInfo: number
-    /** Handle to a JFormMap */
-    recycleInfo: number
-  }
-
-  interface ResultData {
-    /** Handle to a JArray */
-    itemQueue: number
-    /** Handle to a JFormMap */
-    resultVal: number
-  }
-
-  const enum Pools {
-    breakdownArmor = "arrayBreakdownArmorInfo",
-    breakdownWeapon = "arrayBreakdownWeapInfo",
-    ignoreKeyword = "arrayIgnoreKeyword",
-    recycleInfo = "arrayRecycleInfo",
-    itemQueue = "arrayItemQueList",
-    resultVal = "arrayResultVal",
-  }
-
-  const basePath = "Data/RecycleBins"
-  const modsPath = `${basePath}/Mods`
+  const basePath = "Data/SKSE/Plugins/FastRecycle"
 
   const NotifyNotValid = () =>
     Debug.notification("Can not recycle on this. Select another container.")
   const NotifyEmpty = () =>
     Debug.messageBox("This container is empty. Nothing to recycle.")
 
+  const LVs = (v: string) => LV(v)
+
+  /** Unique FormId to form */
+  const uIdToFrom = (uId: string) => {
+    const s = uId.split("|")
+    return Game.getFormFromFile(Number(s[1]), s[0])
+  }
+
+  interface ProcessData {
+    /** List of FormIDs for the keywords that will be ignored. */
+    ignore: number[]
+    /** Materials to recycle to. */
+    mats: FileData
+  }
+
+  /** Counts non playable items in chest to avoid false positives.  */
+  function CountNonPlayable(cn: ObjectReference) {
+    let n = 0
+    FormLib.ForEachItemREx(cn, (i) => {
+      if (!i.isPlayable()) n++
+    })
+    return n
+  }
+
   export function Execute() {
     const cn = Game.getCurrentCrosshairRef()
     if (!cn || !Container.from(cn.getBaseObject())) return NotifyNotValid()
-    if (cn.getNumItems() === 0) return NotifyEmpty()
+    const n = cn.getNumItems()
+    if (n === 0) return NotifyEmpty()
+    if (CountNonPlayable(cn) === n) return NotifyEmpty()
 
-    LA("Container was found")
-    const fileData = ReadDataFiles()
-    const r = InitResultData()
-    GetNonIgnored(r, fileData, cn)
-    GetMaterialIndex(r, fileData)
-    CleanPools()
+    const data = ReadDataFiles()
+    Recycle(cn, data)
   }
 
-  function GetMaterialIndex(r: ResultData, fileData: FileData) {
-    const IsWeapOrAmmo = (item: Form | null) =>
-      Weapon.from(item) || Ammo.from(item)
+  const F = FormLib
+  const IsValidType = (t: FormLib.ItemType) =>
+    t == F.ItemType.Weapon ||
+    t == F.ItemType.Ammo ||
+    t == F.ItemType.Armor ||
+    t == F.ItemType.Misc
 
-    const ContainsKeyword = (item: Form | null, keyword: Form | null) => {
-      if (IsWeapOrAmmo(item))
-        return JFormMap.hasKey(fileData.breakdownWeapInfo, keyword)
-      else return JFormMap.hasKey(fileData.breakdownArmorInfo, keyword)
-    }
+  const ShouldBeIgnored = (i: Form, keys: number[]) =>
+    keys.filter((id) => i.hasKeyword(Keyword.from(Game.getFormEx(id))))
+      .length >= 1
 
-    /** What material keyword is meant to transform to */
-    const GetResult = (item: Form | null, keyword: Form | null) => {
-      const info = IsWeapOrAmmo(item)
-        ? fileData.breakdownWeapInfo
-        : fileData.breakdownArmorInfo
-      return JMap.getForm(info, "result")
-    }
+  const IsEnchanted = (i: Form) =>
+    Armor.from(i)?.getEnchantment() || Weapon.from(i)?.getEnchantment()
 
-    JTs.JArrayL.ForAllItems(r.itemQueue, (i) => {
-      const item = JArray.getForm(r.itemQueue, i)
-      if (!item) return
+  type RecycleResult = Map<string, number>
 
-      FormLib.ForEachKeywordR(item, (key) => {
-        const k = Form.from(key)
-        if (!ContainsKeyword(item, k)) return
+  function GetAllKeywordMatches(item: Form, data: ProcessData) {
+    const keys = data.mats.Keywords
+    let allMatches: string[] = []
 
-        const result = GetResult(item, k)
-        if (!JFormMap.hasKey(r.resultVal, result)) return
-      })
+    FormLib.ForEachKeywordR(item, (k) => {
+      const kName = k.getString()
+      for (const key in keys)
+        if (kName.toLowerCase().includes(key.toLowerCase()))
+          allMatches.push(key)
     })
+    return allMatches
   }
 
-  function GetNonIgnored(
-    r: ResultData,
-    fileData: FileData,
-    cn: ObjectReference
-  ) {
-    const NotIgnored = (item: Form | null) => {
-      if (!item) return false
+  function ItemToMats(
+    item: Form,
+    n: number,
+    data: ProcessData
+  ): RecycleResult | null {
+    const keys = data.mats.Keywords
+    const allMatches = GetAllKeywordMatches(item, data)
 
-      FormLib.ForEachKeywordR(item, (k) => {
-        const i = JArray.findForm(fileData.ignoreKeyword, Form.from(k))
-        if (i >= 0) return false
-      })
-      return true
-    }
+    if (allMatches.length < 1) return null
+    const lastMatch = allMatches[allMatches.length - 1]
 
-    FormLib.ForEachItemR(cn, (item) => {
-      if (!(Weapon.from(item) || Armor.from(item) || Ammo.from(item))) return
-      if (NotIgnored(item)) JArray.addForm(r.itemQueue, item)
+    if (keys[lastMatch].length < 1) return null // Keyword with empty materials
+
+    let r: RecycleResult = new Map()
+    const w = item.getWeight() * n
+
+    keys[lastMatch].forEach((m) => {
+      r.set(m.recycleTo, w * m.matRatio)
     })
-  }
-
-  /** Initializes arrays used to store results */
-  function InitResultData(): ResultData {
-    const r: ResultData = {
-      itemQueue: JArray.object(),
-      resultVal: JFormMap.object(),
-    }
-    JValue.addToPool(r.itemQueue, Pools.itemQueue)
-    JValue.addToPool(r.resultVal, Pools.resultVal)
     return r
   }
 
-  function ReadDataFiles() {
-    const jsonFile = JValue.readFromFile(`${basePath}/Base.json`)
-    const baseData = GetInfoFromFile(jsonFile)
-    ExtendLifeTime(baseData)
-    ReadModsFiles(baseData)
-    JValue.zeroLifetime(jsonFile)
+  function ItemsToMats(cn: ObjectReference, data: ProcessData) {
+    let result: RecycleResult = new Map()
+    FormLib.ForEachItemREx(cn, (i) => {
+      if (!i.isPlayable()) return
 
-    // Remove duplicates
-    baseData.ignoreKeyword = JArray.unique(baseData.ignoreKeyword)
-    return baseData
-  }
+      const t = FormLib.GetItemType(i)
+      if (!IsValidType(t)) return
+      if (ShouldBeIgnored(i, data.ignore)) return
+      if (IsEnchanted(i)) return
 
-  /** Adds mod info to baseData.  */
-  function ReadModsFiles(baseData: FileData) {
-    type AddFunc = (to: number, from: number) => void
-    const Append = (tempCat: number, baseCat: number, Add: AddFunc) => {
-      if (JValue.isExists(tempCat)) Add(baseCat, tempCat)
-      JValue.zeroLifetime(tempCat)
-    }
-    const AddPair = (to: number, from: number) =>
-      JFormMap.addPairs(to, from, true)
+      const n = cn.getItemCount(i)
+      const r = ItemToMats(i, n, data)
+      if (!r) {
+        LV(`${i.getName()} has no materials to get from recycling.`)
+        return
+      }
 
-    const modFiles = JValue.readFromDirectory(`${modsPath}/`, ".json")
-    JTs.JMapL.ForAllKeys(modFiles, (modedjs, _) => {
-      const curr = JMap.getObj(modFiles, modedjs)
-      const tmp = GetInfoFromFile(curr)
+      cn.removeItem(i, n, true, null)
 
-      Append(tmp.ignoreKeyword, baseData.ignoreKeyword, JArray.addFromArray)
-      Append(tmp.breakdownWeapInfo, baseData.breakdownWeapInfo, AddPair)
-      Append(tmp.breakdownArmorInfo, baseData.breakdownArmorInfo, AddPair)
-      Append(tmp.recycleInfo, baseData.recycleInfo, AddPair)
-
-      JValue.zeroLifetime(curr)
+      // Add gotten maps to global materials result
+      for (const [k, v] of r) {
+        const old = result.has(k) ? result.get(k) : 0
+        //@ts-ignore
+        result.set(k, old + v)
+      }
     })
-    JValue.zeroLifetime(modFiles)
+    for (const [k, v] of result) {
+      result.set(k, Math.ceil(v))
+    }
+
+    return result
   }
 
-  function ExtendLifeTime(d: FileData) {
-    JValue.addToPool(d.breakdownArmorInfo, Pools.breakdownArmor)
-    JValue.addToPool(d.breakdownWeapInfo, Pools.breakdownWeapon)
-    JValue.addToPool(d.ignoreKeyword, Pools.ignoreKeyword)
-    JValue.addToPool(d.recycleInfo, Pools.recycleInfo)
+  function Recycle(cn: ObjectReference, data: ProcessData) {
+    const recycled = ItemsToMats(cn, data)
+    recycled.forEach((v, k) => {
+      const item = uIdToFrom(k)
+      cn.addItem(item, v, true)
+    })
+    Debug.messageBox("Recycling has finished")
   }
 
-  function GetInfoFromFile(file: number): FileData {
+  /** Gets all data this mod needs to work */
+  function ReadDataFiles(): ProcessData {
     return {
-      ignoreKeyword: JMap.getObj(file, "IgnoreKeyword"),
-      breakdownWeapInfo: JMap.getObj(file, "KeywordBreakDownWeap"),
-      breakdownArmorInfo: JMap.getObj(file, "KeywordBreakDownArmor"),
-      recycleInfo: JMap.getObj(file, "RecycleInfo"),
+      mats: ReadMaterials(),
+      ignore: ReadIgnored(),
     }
   }
 
-  function CleanPools() {
-    JValue.cleanPool(Pools.breakdownArmor)
-    JValue.cleanPool(Pools.breakdownWeapon)
-    JValue.cleanPool(Pools.ignoreKeyword)
-    JValue.cleanPool(Pools.itemQueue)
-    JValue.cleanPool(Pools.recycleInfo)
-    JValue.cleanPool(Pools.resultVal)
+  /** Logs a title that can be easily seen. */
+  function LogTitle(title: string) {
+    LV("")
+    LV(title)
+    LV("*************************")
+  }
+
+  /** Reads ignored keywords */
+  function ReadIgnored(): number[] {
+    const errFmt =
+      "Ignored keywords file does not exist. All items will be recycled."
+    const p = `${basePath}/ignore.json`
+    const e = MiscUtil.FileExists(p)
+
+    const ignore: string[] = e
+      ? JSON.parse(MiscUtil.ReadFromFile(p))
+      : DebugLib.Log.R(LE(errFmt), [])
+
+    LogTitle("Ignored keywords")
+    ignore.forEach(LVs)
+    const r = ignore
+      .map((v) => uIdToFrom(v)?.getFormID() || 0)
+      .filter((v) => v !== 0)
+
+    LV("Ignored keywords by FormID")
+    r.forEach((v) => LV(v.toString()))
+
+    return r
+  }
+
+  /** Reads material files. Returns a single object with all valid material definitions. */
+  function ReadMaterials() {
+    const files = MiscUtil.FilesInFolder(basePath, ".json").filter((s) =>
+      s.toLowerCase().startsWith("mats_")
+    )
+    LogTitle("Material files")
+    files.forEach(LVs)
+
+    const mats: FileData[] = files.map((fName) =>
+      JSON.parse(MiscUtil.ReadFromFile(`${basePath}/${fName}`))
+    )
+    LogMatFilesData(mats, `Material data (size = ${mats.length})`)
+
+    return ProcessFileMats(mats)
+  }
+
+  /** Returns a single object with all material definitions that currently exist in game. */
+  function ProcessFileMats(mats: FileData[]) {
+    const e = GetExistingMaterialsOnly(mats)
+
+    let r: FileData = e[0]
+    e.forEach((d) => {
+      for (const k in d.Keywords) r.Keywords[k] = d.Keywords[k]
+    })
+    LogTitle("Merged material data")
+    LogSingleMat(r)
+    return r
+  }
+
+  /** From all files, removes all material definitions that aren't currently loaded in game. */
+  function GetExistingMaterialsOnly(mats: FileData[]) {
+    const uIdExists = (uId: string) => uIdToFrom(uId) !== null
+
+    const existent = mats.map((d) => {
+      for (const key in d.Keywords) {
+        const mat = d.Keywords[key]
+        const e = mat.filter((m) => uIdExists(m.recycleTo))
+        d.Keywords[key] = e
+      }
+      return d
+    })
+
+    LogMatFilesData(existent, "Existent materials in current game")
+    return existent
+  }
+
+  /** Logs an array of materials got from many files. */
+  function LogMatFilesData(mats: FileData[], title: string) {
+    LogTitle(title)
+    mats.forEach((v) => {
+      LV("==========")
+      LogSingleMat(v)
+    })
+  }
+
+  /** Logs material definitions from a single file. */
+  function LogSingleMat(mat: FileData) {
+    for (const key in mat.Keywords) {
+      LV(`${key}`)
+      const mt = mat.Keywords[key]
+      mt.forEach((m) =>
+        LV(`      Recycle to: ${m.recycleTo} Mat ratio: ${m.matRatio}`)
+      )
+    }
   }
 }

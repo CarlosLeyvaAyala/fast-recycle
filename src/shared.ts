@@ -36,7 +36,3 @@ export interface KeywordData {
   recycleTo: string
   matRatio: number
 }
-
-let ignoredKeywords: string[] = []
-
-// ignoredKeywords = JSON.parse("")
