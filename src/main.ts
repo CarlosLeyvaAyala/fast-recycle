@@ -1,5 +1,6 @@
 import { DebugLib, FormLib, Hotkeys } from "DMLib"
-import * as MiscUtil from "PapyrusUtil/MiscUtil"
+import { forEachItem } from "DMLib/Form/forEachItem"
+import * as MiscUtil from "MiscUtil"
 import { config, FileData, GetHotkey, LA, LE, LV, Materials } from "shared"
 import {
   Armor,
@@ -56,7 +57,7 @@ namespace Recycle {
   /** Counts non playable items in chest to avoid false positives.  */
   function CountNonPlayable(cn: ObjectReference) {
     let n = 0
-    FormLib.ForEachItemREx(cn, (i) => {
+    forEachItem(cn, (i) => {
       if (!i.isPlayable()) n++
     })
     return n
@@ -141,7 +142,7 @@ namespace Recycle {
         if (allMatches.length === 0) return null // No match
 
         let r: RecycleResult = new Map()
-        const w = item.getWeight() * n
+        const w = (item.getWeight() === 0 ? 0.5 : item.getWeight()) * n
 
         // This is why it's important that keywords in json files are alphabetically sorted
         const lastMatch = allMatches[allMatches.length - 1]
@@ -168,7 +169,7 @@ namespace Recycle {
       export function ItemsToMats(cn: ObjectReference, data: ProcessData) {
         let result: RecycleResult = new Map()
 
-        FormLib.ForEachItemREx(cn, (i) => {
+        forEachItem(cn, (i) => {
           if (!Checks.CanBeRecycled(i, data)) return
 
           const n = cn.getItemCount(i)

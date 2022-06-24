@@ -19,6 +19,7 @@
     "Draugr": [{ "recycleTo": "Skyrim.esm|0x5ACE5", "matRatio": 0.05 }],
     "DraugrHoned": [{ "recycleTo": "Skyrim.esm|0x5ACE5", "matRatio": 0.08 }],
     "Dwarven": [{ "recycleTo": "Skyrim.esm|0xDB8A2", "matRatio": 0.1 }],
+    "Dwemer": [{ "recycleTo": "Skyrim.esm|0xDB8A2", "matRatio": 0.05 }],
     "Ebony": [{ "recycleTo": "Skyrim.esm|0x5AD9D", "matRatio": 0.1 }],
     "Elven": [{ "recycleTo": "Skyrim.esm|0x5AD9F", "matRatio": 0.1 }],
     "ElvenGilded": [
@@ -30,7 +31,7 @@
     "FalmerHoned": [{ "recycleTo": "Skyrim.esm|0x3AD57", "matRatio": 0.08 }],
     "Forsworn": [{ "recycleTo": "Skyrim.esm|0xDB5D2", "matRatio": 0.1 }],
     "Glass": [{ "recycleTo": "Skyrim.esm|0x5ADA1", "matRatio": 0.1 }],
-    "Gold": [{ "recycleTo": "Skyrim.esm|0x5AD9E", "matRatio": 0.1 }],
+    "Gold": [{ "recycleTo": "Skyrim.esm|0x5AD9E", "matRatio": 0.4 }],
     "Golden": [{ "recycleTo": "Skyrim.esm|0x5AD9F", "matRatio": 0.1 }],
     "Hide": [{ "recycleTo": "Skyrim.esm|0xDB5D2", "matRatio": 0.1 }],
     "Hunter": [{ "recycleTo": "Skyrim.esm|0xDB5D2", "matRatio": 0.05 }],
@@ -38,8 +39,8 @@
     "ImperialHeavy": [{ "recycleTo": "Skyrim.esm|0x5ACE5", "matRatio": 0.05 }],
     "ImperialLight": [{ "recycleTo": "Skyrim.esm|0xDB5D2", "matRatio": 0.1 }],
     "ImperialStudded": [{ "recycleTo": "Skyrim.esm|0xDB5D2", "matRatio": 0.1 }],
-    "Iron": [{ "recycleTo": "Skyrim.esm|0x5ACE4", "matRatio": 0.05 }],
-    "IronBanded": [{ "recycleTo": "Skyrim.esm|0x5ACE4", "matRatio": 0.08 }],
+    "Iron": [{ "recycleTo": "Skyrim.esm|0x5ACE4", "matRatio": 0.1 }],
+    "IronBanded": [{ "recycleTo": "Skyrim.esm|0x5ACE4", "matRatio": 0.12 }],
     "Leather": [{ "recycleTo": "Skyrim.esm|0xDB5D2", "matRatio": 0.1 }],
     "MoragTong": [{ "recycleTo": "Dragonborn.esm|0x2B04E", "matRatio": 0.5 }],
     "Madness": [
